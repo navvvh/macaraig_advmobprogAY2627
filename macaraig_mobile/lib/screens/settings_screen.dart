@@ -4,6 +4,9 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../providers/theme_provider.dart';
 
+// Enhancement 3: Add settings page to move the dark/light mode switch.
+// The switch itself lived inline before; it now lives on its own screen,
+// reachable from the settings icon in HomeScreen's AppBar.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
 

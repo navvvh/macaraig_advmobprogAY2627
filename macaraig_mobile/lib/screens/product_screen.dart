@@ -1,14 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-// models
 import '../models/product.dart';
-
-// services
 import '../services/product_service.dart';
-
-// widgets
 import '../widgets/custom_text.dart';
+
+import 'product_details_screen.dart';
 
 class ProductScreen extends StatefulWidget {
   const ProductScreen({super.key});
@@ -20,10 +16,28 @@ class ProductScreen extends StatefulWidget {
 class _ProductScreenState extends State<ProductScreen> {
   late Future<List<Product>> _productsFuture;
 
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
+
   @override
   void initState() {
     super.initState();
     _productsFuture = ProductService().getAllProducts();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+
+  List<Product> _filterProducts(List<Product> products) {
+    if (_searchQuery.trim().isEmpty) return products;
+    final query = _searchQuery.trim().toLowerCase();
+    return products
+        .where((p) => p.title.toLowerCase().contains(query))
+        .toList();
   }
 
   @override
@@ -34,20 +48,38 @@ class _ProductScreenState extends State<ProductScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            
             Container(
               width: ScreenUtil().screenWidth,
-              padding: EdgeInsets.symmetric(
-                horizontal: 16.w,
-                vertical: 12.h,
-              ),
+              padding: EdgeInsets.symmetric(horizontal: 12.w),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12.r),
                 border: Border.all(),
               ),
-              child: CustomText(
-                text: 'Search',
-                fontSize: 20.sp,
-                fontWeight: FontWeight.bold,
+              child: TextField(
+                controller: _searchController,
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+                style: TextStyle(fontSize: 14.sp),
+                decoration: InputDecoration(
+                  border: InputBorder.none,
+                  hintText: 'Search products...',
+                  prefixIcon: Icon(Icons.search, size: 20.sp),
+                  suffixIcon: _searchQuery.isEmpty
+                      ? null
+                      : IconButton(
+                          icon: Icon(Icons.close, size: 18.sp),
+                          onPressed: () {
+                            setState(() {
+                              _searchController.clear();
+                              _searchQuery = '';
+                            });
+                          },
+                        ),
+                ),
               ),
             ),
             SizedBox(height: 16.h),
@@ -73,12 +105,23 @@ class _ProductScreenState extends State<ProductScreen> {
                   );
                 }
 
-                final products = snapshot.data ?? [];
+                final allProducts = snapshot.data ?? [];
+                
+                final products = _filterProducts(allProducts);
+
+                if (allProducts.isEmpty) {
+                  return Center(
+                    child: CustomText(
+                      text: 'No products found.',
+                      fontSize: 14.sp,
+                    ),
+                  );
+                }
 
                 if (products.isEmpty) {
                   return Center(
                     child: CustomText(
-                      text: 'No products found.',
+                      text: 'No results for "$_searchQuery".',
                       fontSize: 14.sp,
                     ),
                   );
@@ -98,7 +141,18 @@ class _ProductScreenState extends State<ProductScreen> {
                   itemBuilder: (context, index) {
                     final product = products[index];
 
-                    return Card(
+                   
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                ProductDetailsScreen(product: product),
+                          ),
+                        );
+                      },
+                      child: Card(
                       elevation: 2,
                       clipBehavior: Clip.antiAlias,
                       shape: RoundedRectangleBorder(
@@ -146,6 +200,7 @@ class _ProductScreenState extends State<ProductScreen> {
                             ),
                           ),
                         ],
+                      ),
                       ),
                     );
                   },
