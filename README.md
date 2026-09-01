@@ -11,6 +11,7 @@ Lab Activity 1: Discussion
 setState only works on one screen leave it, and the value resets. Provider shares state across the whole app, so one change updates everywhere. We used setState
 for the counter and Provider for the theme.
 
+--------------------------------------------------------------------------------------------
 
 Lab Activity 2: Discussion
 
