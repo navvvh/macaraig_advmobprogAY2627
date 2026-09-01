@@ -31,7 +31,6 @@ class _ProductScreenState extends State<ProductScreen> {
     super.dispose();
   }
 
-
   List<Product> _filterProducts(List<Product> products) {
     if (_searchQuery.trim().isEmpty) return products;
     final query = _searchQuery.trim().toLowerCase();
@@ -48,7 +47,6 @@ class _ProductScreenState extends State<ProductScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
             Container(
               width: ScreenUtil().screenWidth,
               padding: EdgeInsets.symmetric(horizontal: 12.w),
@@ -86,8 +84,7 @@ class _ProductScreenState extends State<ProductScreen> {
             FutureBuilder<List<Product>>(
               future: _productsFuture,
               builder: (context, snapshot) {
-                if (snapshot.connectionState ==
-                    ConnectionState.waiting) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(
                     child: Padding(
                       padding: EdgeInsets.all(32.r),
@@ -106,7 +103,7 @@ class _ProductScreenState extends State<ProductScreen> {
                 }
 
                 final allProducts = snapshot.data ?? [];
-                
+
                 final products = _filterProducts(allProducts);
 
                 if (allProducts.isEmpty) {
@@ -131,8 +128,7 @@ class _ProductScreenState extends State<ProductScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: products.length,
-                  gridDelegate:
-                      SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 10.w,
                     mainAxisSpacing: 10.h,
@@ -141,7 +137,6 @@ class _ProductScreenState extends State<ProductScreen> {
                   itemBuilder: (context, index) {
                     final product = products[index];
 
-                   
                     return GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -153,54 +148,50 @@ class _ProductScreenState extends State<ProductScreen> {
                         );
                       },
                       child: Card(
-                      elevation: 2,
-                      clipBehavior: Clip.antiAlias,
-                      shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(12.r),
-                      ),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Image.network(
-                              product.thumbnail,
-                              fit: BoxFit.cover,
-                              width: double.infinity,
-                              errorBuilder:
-                                  (_, __, ___) => Icon(
-                                Icons.image,
-                                size: 24.sp,
+                        elevation: 2,
+                        clipBehavior: Clip.antiAlias,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12.r),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Hero(
+                                tag: 'product_${product.id}',
+                                child: Image.network(
+                                  product.thumbnail,
+                                  fit: BoxFit.contain,
+                                  width: double.infinity,
+                                  errorBuilder: (_, _, _) =>
+                                      Icon(Icons.image, size: 24.sp),
+                                ),
                               ),
                             ),
-                          ),
-                          Padding(
-                            padding: EdgeInsets.all(8.r),
-                            child: Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.start,
-                              children: [
-                                CustomText(
-                                  text: product.title,
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.bold,
-                                  maxLines: 1,
-                                  overflow:
-                                      TextOverflow.ellipsis,
-                                ),
-                                SizedBox(height: 4.h),
-                                CustomText(
-                                  text:
-                                      '\$${product.price.toStringAsFixed(2)}',
-                                  fontSize: 13.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ],
+                            Padding(
+                              padding: EdgeInsets.all(8.r),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  CustomText(
+                                    text: product.title,
+                                    fontSize: 14.sp,
+                                    fontWeight: FontWeight.bold,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  SizedBox(height: 4.h),
+                                  CustomText(
+                                    text:
+                                        '\$${product.price.toStringAsFixed(2)}',
+                                    fontSize: 13.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        ),
                       ),
                     );
                   },

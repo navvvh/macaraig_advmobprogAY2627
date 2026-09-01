@@ -94,9 +94,9 @@ class _CartScreenState extends State<CartScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to open product: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to open product: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -121,10 +121,7 @@ class _CartScreenState extends State<CartScreen> {
         };
       }).toList();
 
-      await CartService().addToCart(
-        userId: _userId,
-        products: products,
-      );
+      await CartService().addToCart(userId: _userId, products: products);
 
       if (!mounted) return;
 
@@ -134,9 +131,9 @@ class _CartScreenState extends State<CartScreen> {
     } catch (e) {
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to add products: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to add products: $e')));
     } finally {
       if (mounted) {
         setState(() {
@@ -195,8 +192,8 @@ class _CartScreenState extends State<CartScreen> {
 
                   final qty = _quantities[item.id] ?? item.quantity;
 
-                  final unitDiscounted = item.price -
-                      (item.price * item.discountPercentage / 100);
+                  final unitDiscounted =
+                      item.price - (item.price * item.discountPercentage / 100);
 
                   final lineTotal = unitDiscounted * qty;
 
@@ -211,7 +208,7 @@ class _CartScreenState extends State<CartScreen> {
                           borderRadius: BorderRadius.circular(12.r),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
+                              color: Colors.black.withValues(alpha: 0.05),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -226,7 +223,7 @@ class _CartScreenState extends State<CartScreen> {
                                 width: 64.w,
                                 height: 64.w,
                                 fit: BoxFit.cover,
-                                errorBuilder: (_, __, ___) =>
+                                errorBuilder: (_, _, _) =>
                                     Icon(Icons.image, size: 32.sp),
                               ),
                             ),
@@ -244,8 +241,7 @@ class _CartScreenState extends State<CartScreen> {
                                   ),
                                   SizedBox(height: 4.h),
                                   CustomText(
-                                    text:
-                                        '\$${item.price.toStringAsFixed(2)}',
+                                    text: '\$${item.price.toStringAsFixed(2)}',
                                     fontSize: 13.sp,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -326,8 +322,9 @@ class _CartScreenState extends State<CartScreen> {
                           borderRadius: BorderRadius.circular(12.r),
                         ),
                       ),
-                      onPressed:
-                          _addingToCart ? null : _addCurrentProductsToCart,
+                      onPressed: _addingToCart
+                          ? null
+                          : _addCurrentProductsToCart,
                       child: _addingToCart
                           ? SizedBox(
                               height: 20.h,

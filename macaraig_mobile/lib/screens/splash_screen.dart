@@ -26,9 +26,10 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     _fade = CurvedAnimation(parent: _controller, curve: Curves.easeIn);
-    _scale = Tween<double>(begin: 0.85, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutBack),
-    );
+    _scale = Tween<double>(
+      begin: 0.85,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
 
     _controller.forward();
   }
@@ -50,9 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
   Future<void> _proceed(Object? args) async {
     final isPostLogin = args is Map<String, dynamic>;
 
-    await Future.delayed(
-      Duration(milliseconds: isPostLogin ? 1200 : 1800),
-    );
+    await Future.delayed(Duration(milliseconds: isPostLogin ? 1200 : 1800));
 
     if (!mounted) return;
 
@@ -79,10 +78,7 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFF9F9FF),
-              Color(0xFFEFEFFB),
-            ],
+            colors: [Color(0xFFF9F9FF), Color(0xFFEFEFFB)],
           ),
         ),
         child: Center(
@@ -100,7 +96,7 @@ class _SplashScreenState extends State<SplashScreen>
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.06),
+                          color: Colors.black.withValues(alpha: 0.06),
                           blurRadius: 20,
                           offset: const Offset(0, 8),
                         ),
@@ -127,8 +123,9 @@ class _SplashScreenState extends State<SplashScreen>
                     width: 28,
                     height: 28,
                     child: CircularProgressIndicator(
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Color(0xFFF1C40F)),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(0xFFF1C40F),
+                      ),
                       strokeWidth: 3,
                     ),
                   ),

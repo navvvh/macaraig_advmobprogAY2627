@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+
 import '../models/product.dart';
+import '../services/cart_service.dart';
+import '../services/user_service.dart';
 import '../widgets/custom_text.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
@@ -14,182 +17,277 @@ class ProductDetailsScreen extends StatefulWidget {
 
 class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   bool _showFullDescription = false;
+  bool _isAddingToCart = false;
+
+  Future<void> _addToCart() async {
+    if (_isAddingToCart || widget.product.stock <= 0) return;
+    setState(() => _isAddingToCart = true);
+
+    try {
+      final user = await UserService().getUser();
+      if (user.id <= 0) throw Exception('No signed-in user found');
+      await CartService().addToCart(
+        userId: user.id,
+        products: [
+          {'id': widget.product.id, 'quantity': 1},
+        ],
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${widget.product.title} added to cart')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not add product to cart: $e')),
+      );
+    } finally {
+      if (mounted) setState(() => _isAddingToCart = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+    final theme = Theme.of(context);
+    final inStock = product.stock > 0;
 
     return Scaffold(
-      body: CustomScrollView(
-        slivers: [
-          // Hero image with a back button floating on top, matching the
-          // mock's illustration + circular back button layout.
-          SliverAppBar(
-            pinned: false,
-            expandedHeight: 320.h,
-            backgroundColor: Theme.of(context).colorScheme.secondaryContainer,
-            leading: Padding(
-              padding: EdgeInsets.only(left: 12.w, top: 4.h),
-              child: CircleAvatar(
-                backgroundColor: Colors.white,
-                child: IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.black),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: Hero(
-                tag: 'product_${product.id}',
-                child: Image.network(
-                  product.thumbnail,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Icon(
-                    Icons.image,
-                    size: 80.sp,
-                  ),
-                ),
+      appBar: AppBar(title: const Text('Product details'), centerTitle: true),
+      bottomNavigationBar: SafeArea(
+        minimum: EdgeInsets.fromLTRB(20.w, 10.h, 20.w, 16.h),
+        child: SizedBox(
+          height: 52.h,
+          child: FilledButton.icon(
+            onPressed: inStock && !_isAddingToCart ? _addToCart : null,
+            icon: _isAddingToCart
+                ? SizedBox(
+                    width: 20.w,
+                    height: 20.h,
+                    child: const CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Icon(Icons.shopping_cart_outlined, size: 21.sp),
+            label: Text(inStock ? 'Add to cart' : 'Out of stock'),
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFF3840A2),
+              disabledBackgroundColor: theme.disabledColor,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14.r),
               ),
             ),
           ),
-
-        
-          SliverToBoxAdapter(
-            child: Container(
-              padding: EdgeInsets.all(20.w),
+        ),
+      ),
+      body: SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(20.w, 16.h, 20.w, 12.h),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: double.infinity,
               decoration: BoxDecoration(
-                color: Theme.of(context).scaffoldBackgroundColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(24.r),
-                  topRight: Radius.circular(24.r),
+                color: theme.colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(20.r),
+              ),
+              child: AspectRatio(
+                // The fixed frame prevents portrait/landscape images stretching.
+                aspectRatio: 1.15,
+                child: Padding(
+                  padding: EdgeInsets.all(20.w),
+                  child: Hero(
+                    tag: 'product_${product.id}',
+                    child: Image.network(
+                      product.thumbnail,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, _, _) =>
+                          Icon(Icons.image_outlined, size: 72.sp),
+                    ),
+                  ),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CustomText(
-                    text: product.title,
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                  ),
-                  SizedBox(height: 6.h),
-                  CustomText(
-                    text: product.brand,
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w400,
-                  ),
-                  SizedBox(height: 14.h),
-
-                  Row(
-                    children: [
-                      CustomText(
-                        text: '\$${product.price.toStringAsFixed(2)}',
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      SizedBox(width: 10.w),
-                      Icon(Icons.star, color: Colors.amber, size: 18.sp),
-                      SizedBox(width: 2.w),
-                      CustomText(
-                        text: product.rating.toStringAsFixed(1),
-                        fontSize: 13.sp,
-                      ),
-                      SizedBox(width: 10.w),
-                      CustomText(
-                        text: product.stock > 0
-                            ? '${product.stock} in stock'
-                            : 'Out of stock',
-                        fontSize: 12.sp,
-                      ),
-                    ],
-                  ),
-
-                  SizedBox(height: 18.h),
-                  CustomText(
-                    text: 'Description',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  SizedBox(height: 6.h),
-
-                
-                  CustomText(
-                    text: product.description,
-                    fontSize: 13.sp,
-                    maxLines: _showFullDescription ? null : 3,
-                    overflow: _showFullDescription
-                        ? null
-                        : TextOverflow.ellipsis,
-                  ),
-                  if (product.description.length > 90)
-                    GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _showFullDescription = !_showFullDescription;
-                        });
-                      },
-                      child: Padding(
-                        padding: EdgeInsets.only(top: 4.h),
-                        child: CustomText(
-                          text: _showFullDescription ? 'Show less' : 'Read All',
-                          fontSize: 13.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-
-                  SizedBox(height: 18.h),
-                  CustomText(
-                    text: 'Category',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  SizedBox(height: 4.h),
-                  CustomText(text: product.category, fontSize: 13.sp),
-
-                  SizedBox(height: 18.h),
-                  CustomText(
-                    text: 'Reviews (${product.reviews.length})',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  SizedBox(height: 8.h),
-                  ...product.reviews.map(
-                    (review) => Padding(
-                      padding: EdgeInsets.only(bottom: 10.h),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              CustomText(
-                                text: review.reviewerName,
-                                fontSize: 13.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                              SizedBox(width: 6.w),
-                              Icon(Icons.star,
-                                  color: Colors.amber, size: 14.sp),
-                              CustomText(
-                                text: '${review.rating}',
-                                fontSize: 12.sp,
-                              ),
-                            ],
-                          ),
-                          CustomText(
-                            text: review.comment,
-                            fontSize: 12.sp,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
+            ),
+            SizedBox(height: 20.h),
+            Wrap(
+              spacing: 8.w,
+              runSpacing: 8.h,
+              children: [
+                _InfoChip(label: product.category),
+                _InfoChip(
+                  label: inStock
+                      ? '${product.stock} available'
+                      : 'Out of stock',
+                  color: inStock ? Colors.green : theme.colorScheme.error,
+                ),
+              ],
+            ),
+            SizedBox(height: 12.h),
+            CustomText(
+              text: product.title,
+              fontSize: 24.sp,
+              fontWeight: FontWeight.w700,
+            ),
+            if (product.brand.isNotEmpty) ...[
+              SizedBox(height: 3.h),
+              CustomText(
+                text: product.brand,
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w500,
               ),
+            ],
+            SizedBox(height: 12.h),
+            Row(
+              children: [
+                CustomText(
+                  text: '\$${product.price.toStringAsFixed(2)}',
+                  fontSize: 22.sp,
+                  fontWeight: FontWeight.w700,
+                ),
+                const Spacer(),
+                Icon(Icons.star_rounded, color: Colors.amber, size: 21.sp),
+                SizedBox(width: 4.w),
+                CustomText(
+                  text: product.rating.toStringAsFixed(1),
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w600,
+                ),
+              ],
+            ),
+            SizedBox(height: 24.h),
+            const _SectionTitle(text: 'Description'),
+            SizedBox(height: 7.h),
+            CustomText(
+              text: product.description,
+              fontSize: 14.sp,
+              maxLines: _showFullDescription ? null : 3,
+              overflow: _showFullDescription ? null : TextOverflow.ellipsis,
+            ),
+            if (product.description.length > 90)
+              TextButton(
+                onPressed: () => setState(
+                  () => _showFullDescription = !_showFullDescription,
+                ),
+                style: TextButton.styleFrom(padding: EdgeInsets.zero),
+                child: Text(_showFullDescription ? 'Show less' : 'Read more'),
+              ),
+            SizedBox(height: 14.h),
+            const _SectionTitle(text: 'Product information'),
+            SizedBox(height: 8.h),
+            _DetailsCard(product: product),
+            if (product.reviews.isNotEmpty) ...[
+              SizedBox(height: 22.h),
+              _SectionTitle(text: 'Reviews (${product.reviews.length})'),
+              SizedBox(height: 8.h),
+              ...product.reviews.map((review) => _ReviewCard(review: review)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.label, this.color});
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) => Chip(
+    label: Text(label),
+    labelStyle: TextStyle(fontSize: 12.sp, color: color),
+    visualDensity: VisualDensity.compact,
+  );
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.text});
+  final String text;
+  @override
+  Widget build(BuildContext context) =>
+      CustomText(text: text, fontSize: 16.sp, fontWeight: FontWeight.w700);
+}
+
+class _DetailsCard extends StatelessWidget {
+  const _DetailsCard({required this.product});
+  final Product product;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.zero,
+    child: Padding(
+      padding: EdgeInsets.all(14.w),
+      child: Column(
+        children: [
+          _DetailRow(label: 'SKU', value: product.sku),
+          _DetailRow(label: 'Warranty', value: product.warrantyInformation),
+          _DetailRow(label: 'Shipping', value: product.shippingInformation),
+          _DetailRow(label: 'Return policy', value: product.returnPolicy),
+        ],
+      ),
+    ),
+  );
+}
+
+class _DetailRow extends StatelessWidget {
+  const _DetailRow({required this.label, required this.value});
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    if (value.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 5.h),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100.w,
+            child: Text(label, style: TextStyle(fontSize: 12.sp)),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: TextStyle(fontSize: 12.sp, fontWeight: FontWeight.w600),
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _ReviewCard extends StatelessWidget {
+  const _ReviewCard({required this.review});
+  final ProductReview review;
+
+  @override
+  Widget build(BuildContext context) => Card(
+    margin: EdgeInsets.only(bottom: 8.h),
+    child: Padding(
+      padding: EdgeInsets.all(12.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  review.reviewerName,
+                  style: TextStyle(
+                    fontSize: 13.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Icon(Icons.star_rounded, color: Colors.amber, size: 16),
+              Text(' ${review.rating}', style: TextStyle(fontSize: 12.sp)),
+            ],
+          ),
+          SizedBox(height: 5.h),
+          Text(review.comment, style: TextStyle(fontSize: 12.sp)),
+        ],
+      ),
+    ),
+  );
 }
