@@ -37,3 +37,13 @@ log the user out when needed.
 This follows the same pattern used for Cart in the earlier activity: the User model just holds the data, UserService handles the login and saving/loading, and the screens just display things and call UserService when they need data — they don't deal with storage directly.
 
 For the cart, instead of always showing one fixed user's cart, the app now gets the ID of whoever is actually logged in and uses that to fetch their specific cart from the API. So the cart shown always matches the signed-in user.
+
+---------------------------------------------------------------------------------------------
+
+## Lab Activity 5: Discussion
+
+The sign-in screen supports two distinct flows so the previous API activity can still be compared with Firebase. DummyJSON sign-in sends a username and password to `https://dummyjson.com/auth/login`, saves the returned sample profile and tokens, and refreshes its access token when the app restores that session. For example, DummyJSON documents `emilys` / `emilyspass` as sample credentials. DummyJSON is a practice API; its token and account are separate from Firebase.
+
+Firebase sign-in uses email and password through the Firebase Authentication SDK. The Firebase signup screen collects first name, last name, age, contact number, username, email, and a validated password. Firebase manages the authenticated session and its ID-token refresh. The app stores profile details locally for display; it does not store the password. Firebase password changes and account deletion require reauthentication. Username edits update Firebase's display name; DummyJSON username edits update only the local sample profile.
+
+`UserService` keeps both authentication flows and local profile storage out of the screens. The splash screen restores the correct session type, while logout clears the local session and signs out Firebase. Firebase Authentication is configured in this activity; the app does not use Firebase Realtime Database or Cloud Firestore, so database security rules are not part of this implementation. DummyJSON password changes and account deletion are not available through this app because it is only used here as a sample login API.
