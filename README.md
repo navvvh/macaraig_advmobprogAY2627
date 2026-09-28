@@ -47,3 +47,19 @@ The sign-in screen supports two distinct flows so the previous API activity can 
 Firebase sign-in uses email and password through the Firebase Authentication SDK. The Firebase signup screen collects first name, last name, age, contact number, username, email, and a validated password. Firebase manages the authenticated session and its ID-token refresh. The app stores profile details locally for display; it does not store the password. Firebase password changes and account deletion require reauthentication. Username edits update Firebase's display name; DummyJSON username edits update only the local sample profile.
 
 `UserService` keeps both authentication flows and local profile storage out of the screens. The splash screen restores the correct session type, while logout clears the local session and signs out Firebase. Firebase Authentication is configured in this activity; the app does not use Firebase Realtime Database or Cloud Firestore, so database security rules are not part of this implementation. DummyJSON password changes and account deletion are not available through this app because it is only used here as a sample login API.
+
+The cart follows the same separation: DummyJSON users load their sample cart from the DummyJSON Cart API. Firebase accounts have no DummyJSON numeric user ID, so each Firebase UID gets a separate cart saved on the current device. A new Firebase account starts with an empty cart; adding products and changing quantities are saved to that account's local cart. This cart is not synced to another device because Firebase Database has not been added.
+
+---------------------------------------------------------------------------------------------
+
+## Lab Activity 6: Discussion
+
+Firebase Authentication provides the UID used to secure each chat. Firebase account holders use their Firebase UID. DummyJSON account holders keep using DummyJSON for sign-in, and the app creates a Firebase Anonymous Auth identity for Firestore access. Enable Anonymous sign-in in Firebase Authentication settings for this flow. Their profile is saved in Firestore under that chat UID, so Firebase and DummyJSON users can find and message each other. The anonymous identity is tied to the app installation, not a permanent Firebase account. When a user logs in or opens Chat, their information is saved in Firestore under users/{uid}. The Chat List shows the other users and does not show the current user. Users can also search for other users using their name or email. A user needs to log in at least once before they appear in the Chat List.
+
+Each chat has its own document based on the UIDs of the two users. The chat contains the participants, timestamps, and the latest message. The messages are stored inside the chat and include the sender, receiver, message, time, and status. The messages are updated in real time using Firestore. While sending a message, it shows “Sending…” and after it is saved, a check mark appears.
+
+The user cannot chat with their own account. The current user is already removed from the Chat List, and the chat service also prevents sending a message to the same UID.
+
+The project uses firestore.rules to control access to the Firestore data. Only logged-in users can access the chat directory, users can only update their own profile, and only the users included in a chat can access its messages. The rules need to be published to Firebase before the chat can work properly. The user's email is also saved in Firestore so it can be used for searching.
+
+For the Lab 6 requirements, the chat uses avatars, search, message bubbles, timestamps, sending status, and real-time updates. The like/comment buttons mentioned in the general rubric are not part of our chat feature.

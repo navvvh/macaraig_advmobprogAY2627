@@ -7,10 +7,13 @@ import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 
 import 'package:macaraig_mobile/screens/home_screen.dart';
+import 'package:macaraig_mobile/screens/chat_detail_screen.dart';
+import 'package:macaraig_mobile/screens/chat_screen.dart';
 import 'package:macaraig_mobile/screens/settings_screen.dart';
 import 'package:macaraig_mobile/screens/splash_screen.dart';
 import 'package:macaraig_mobile/screens/signin_screen.dart';
 import 'package:macaraig_mobile/screens/signup_screen.dart';
+import 'package:macaraig_mobile/models/user.dart';
 
 import 'providers/theme_provider.dart';
 
@@ -67,6 +70,18 @@ class MacaraigAdvMobProg extends StatelessWidget {
               '/signup': (context) => const SignUpScreen(),
 
               '/home': (context) => const HomeScreen(),
+
+              '/chats': (context) => const ChatScreen(),
+
+              '/chat-details': (context) {
+                final recipient = ModalRoute.of(context)?.settings.arguments;
+                if (recipient is User) {
+                  return ChatDetailScreen(recipient: recipient);
+                }
+                return const Scaffold(
+                  body: Center(child: Text('No chat recipient was selected.')),
+                );
+              },
 
               '/settings': (context) => SettingsScreen(),
             },

@@ -25,13 +25,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
     try {
       final user = await UserService().getUser();
-      if (user.id <= 0) throw Exception('No signed-in user found');
-      await CartService().addToCart(
-        userId: user.id,
-        products: [
-          {'id': widget.product.id, 'quantity': 1},
-        ],
-      );
+      await CartService().addProductForUser(user, widget.product);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${widget.product.title} added to cart')),

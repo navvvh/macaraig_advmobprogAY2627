@@ -11,6 +11,7 @@ class User {
   final String age;
   final String contactNo;
   final String loginType;
+  final String firebaseUid;
 
   User({
     required this.id,
@@ -25,6 +26,7 @@ class User {
     this.age = '',
     this.contactNo = '',
     this.loginType = 'firebase',
+    this.firebaseUid = '',
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -41,6 +43,7 @@ class User {
       age: json['age']?.toString() ?? '',
       contactNo: json['contactNo'] ?? '',
       loginType: json['loginType'] ?? 'dummyjson',
+      firebaseUid: json['firebaseUid'] ?? json['uid'] ?? '',
     );
   }
 
@@ -58,6 +61,7 @@ class User {
       'age': age,
       'contactNo': contactNo,
       'loginType': loginType,
+      'firebaseUid': firebaseUid,
     };
   }
 }

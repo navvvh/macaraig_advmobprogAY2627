@@ -17,6 +17,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
+  int _cartViewVersion = 0;
 
   final PageController _pageController = PageController();
 
@@ -95,9 +96,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 backgroundColor: const Color(0xFFF1C40F),
                 foregroundColor: const Color(0xFF1E1E1E),
                 onPressed: () {
-                  ScaffoldMessenger.of(
-                    context,
-                  ).showSnackBar(const SnackBar(content: Text('Chat opened')));
+                  Navigator.pushNamed(context, '/chats');
                 },
                 child: const Icon(Icons.chat),
               ),
@@ -109,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
           controller: _pageController,
           children: [
             const ProductScreen(),
-            const CartScreen(),
+            CartScreen(key: ValueKey(_cartViewVersion)),
             // Enhancement 3: Real ProfileScreen fed by the user data
             // already carried over from splash — no second fetch.
             _user == null
@@ -146,6 +145,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _onTappedBar(int value) {
     setState(() {
       _selectedIndex = value;
+      if (value == 1) _cartViewVersion++;
     });
 
     _pageController.jumpToPage(value);

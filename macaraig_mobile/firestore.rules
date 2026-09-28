@@ -1,0 +1,94 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function validMembers(members) {
+      return members is list
+        && members.size() == 2
+        && members[0] is string
+        && members[1] is string
+        && members[0] != members[1]
+        && request.auth.uid in members;
+    }
+
+    match /users/{userId} {
+      // The chat list needs public profile fields for signed-in users to find
+      // recipients by name and email. Passwords and tokens are never stored here.
+      allow get, list: if signedIn();
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == userId
+        && request.resource.data.keys().hasOnly([
+          'uid', 'email', 'username', 'firstName', 'lastName', 'displayName',
+          'photoUrl', 'createdAt', 'updatedAt'
+        ]);
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
+    match /chats/{chatId} {
+      function isMember() {
+        return signedIn() && request.auth.uid in resource.data.members;
+      }
+
+      // A signed-in user may check a deterministic room ID when it does not
+      // exist yet; existing rooms remain readable only to their participants.
+      allow get: if signedIn()
+        && (!exists(/databases/$(database)/documents/chats/$(chatId)) || isMember());
+      allow list: if isMember();
+
+      allow create: if signedIn()
+        && validMembers(request.resource.data.members)
+        && request.resource.data.keys().hasOnly([
+          'members', 'createdAt', 'updatedAt', 'lastMessage',
+          'lastMessageAt', 'lastSenderId'
+        ])
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastMessage == ''
+        && request.resource.data.lastMessageAt == null
+        && request.resource.data.lastSenderId == null;
+
+      allow update: if isMember()
+        && request.resource.data.members == resource.data.members
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'updatedAt', 'lastMessage', 'lastMessageAt', 'lastSenderId'
+        ])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastMessage is string
+        && request.resource.data.lastMessage.size() <= 4000
+        && request.resource.data.lastSenderId == request.auth.uid
+        && request.resource.data.lastMessageAt == request.time;
+
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        function isChatMember() {
+          return signedIn()
+            && request.auth.uid in get(
+              /databases/$(database)/documents/chats/$(chatId)
+            ).data.members;
+        }
+
+        allow get, list: if isChatMember();
+        allow create: if isChatMember()
+          && request.resource.data.keys().hasOnly([
+            'senderId', 'receiverId', 'text', 'createdAt', 'status'
+          ])
+          && request.resource.data.senderId == request.auth.uid
+          && request.resource.data.receiverId in get(
+            /databases/$(database)/documents/chats/$(chatId)
+          ).data.members
+          && request.resource.data.receiverId != request.auth.uid
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.status == 'sent';
+        allow update, delete: if false;
+      }
+    }
+  }
+}

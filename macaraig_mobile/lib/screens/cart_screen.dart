@@ -39,7 +39,7 @@ class _CartScreenState extends State<CartScreen> {
   Future<List<Cart>> _loadCart() async {
     final user = await UserService().getUser();
     _userId = user.id;
-    return CartService().getCartByUserId(_userId);
+    return CartService().getCartForUser(user);
   }
 
   double get _subtotal {
@@ -114,14 +114,18 @@ class _CartScreenState extends State<CartScreen> {
     });
 
     try {
-      final products = _items.map((item) {
-        return {
-          'id': item.id,
-          'quantity': _quantities[item.id] ?? item.quantity,
-        };
-      }).toList();
-
-      await CartService().addToCart(userId: _userId, products: products);
+      final user = await UserService().getUser();
+      if (user.loginType == 'firebase') {
+        await CartService().saveFirebaseCartQuantities(_quantities);
+      } else {
+        final products = _items.map((item) {
+          return {
+            'id': item.id,
+            'quantity': _quantities[item.id] ?? item.quantity,
+          };
+        }).toList();
+        await CartService().addToCart(userId: _userId, products: products);
+      }
 
       if (!mounted) return;
 
@@ -169,7 +173,7 @@ class _CartScreenState extends State<CartScreen> {
         if (carts.isEmpty) {
           return Center(
             child: CustomText(
-              text: 'No cart found for User $_userId.',
+              text: 'Your cart is empty. Add products from the Shop.',
               fontSize: 14.sp,
             ),
           );
