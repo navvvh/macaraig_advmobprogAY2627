@@ -2,12 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 import 'package:provider/provider.dart';
 
 import 'package:macaraig_mobile/screens/home_screen.dart';
 import 'package:macaraig_mobile/screens/settings_screen.dart';
 import 'package:macaraig_mobile/screens/splash_screen.dart';
 import 'package:macaraig_mobile/screens/signin_screen.dart';
+import 'package:macaraig_mobile/screens/signup_screen.dart';
 
 import 'providers/theme_provider.dart';
 
@@ -19,6 +22,7 @@ void main() async {
   ]);
 
   await dotenv.load(fileName: 'assets/.env');
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const MacaraigAdvMobProg());
 }
@@ -59,6 +63,8 @@ class MacaraigAdvMobProg extends StatelessWidget {
               '/splash': (context) => const SplashScreen(),
 
               '/signin': (context) => const SignInScreen(),
+
+              '/signup': (context) => const SignUpScreen(),
 
               '/home': (context) => const HomeScreen(),
 

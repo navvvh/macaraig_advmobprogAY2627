@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import '../services/user_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -38,9 +39,6 @@ class _SplashScreenState extends State<SplashScreen>
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Runs once per screen instance. Distinguishes:
-    // - cold app start (no arguments)      -> go to Sign In
-    // - post-login transition (user data passed as arguments) -> go to Home
     if (!_navigated) {
       _navigated = true;
       final args = ModalRoute.of(context)?.settings.arguments;
@@ -49,14 +47,14 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _proceed(Object? args) async {
-    final isPostLogin = args is Map<String, dynamic>;
-
-    await Future.delayed(Duration(milliseconds: isPostLogin ? 1200 : 1800));
+    await Future.delayed(const Duration(milliseconds: 1200));
 
     if (!mounted) return;
 
-    if (isPostLogin) {
-      Navigator.pushReplacementNamed(context, '/home', arguments: args);
+    if (await UserService().isLoggedIn()) {
+      final user = await UserService().getUserData();
+      if (!mounted) return;
+      Navigator.pushReplacementNamed(context, '/home', arguments: user);
     } else {
       Navigator.pushReplacementNamed(context, '/signin');
     }

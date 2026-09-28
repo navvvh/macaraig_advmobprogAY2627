@@ -8,6 +8,9 @@ class User {
   final String image;
   final String accessToken;
   final String refreshToken;
+  final String age;
+  final String contactNo;
+  final String loginType;
 
   User({
     required this.id,
@@ -19,6 +22,9 @@ class User {
     required this.image,
     required this.accessToken,
     required this.refreshToken,
+    this.age = '',
+    this.contactNo = '',
+    this.loginType = 'firebase',
   });
 
   factory User.fromJson(Map<String, dynamic> json) {
@@ -32,6 +38,9 @@ class User {
       image: json['image'] ?? '',
       accessToken: json['accessToken'] ?? json['token'] ?? '',
       refreshToken: json['refreshToken'] ?? '',
+      age: json['age']?.toString() ?? '',
+      contactNo: json['contactNo'] ?? '',
+      loginType: json['loginType'] ?? 'dummyjson',
     );
   }
 
@@ -46,6 +55,9 @@ class User {
       'image': image,
       'accessToken': accessToken,
       'refreshToken': refreshToken,
+      'age': age,
+      'contactNo': contactNo,
+      'loginType': loginType,
     };
   }
 }
